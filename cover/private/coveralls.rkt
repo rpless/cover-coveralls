@@ -4,20 +4,18 @@
          racket/file
          racket/function
          racket/list
-         racket/path
          racket/port
          racket/pretty
          racket/runtime-path
          racket/string
          racket/system
-         "file-utils.rkt"
-         "shared.rkt")
+         cover/private/file-utils)
 
 
 (module+ test
-  (require rackunit "../cover.rkt" racket/runtime-path)
+  (require rackunit cover racket/runtime-path)
   (require (for-syntax racket/base))
-  (define-runtime-path tests/prog.rkt "../tests/prog.rkt")
+  (define-runtime-path tests/prog.rkt "tests/prog.rkt")
   (define-runtime-path root "..")
 
   (define-syntax (with-env stx)
@@ -48,7 +46,7 @@
     (thunk (write-json data))
     #:exists 'replace)
   (vprintf "data written was:\n")
-  (vprintf #:printer pretty-print data)
+  (vprintf #:formatter pretty-format data)
   coverage-file)
 
 (module+ test
@@ -64,14 +62,11 @@
 
 (define (send-coveralls-info coverage-file)
   (vprintf "invoking coveralls API")
-  (parameterize ([current-output-port
-                  (if (verbose)
-                      (current-output-port)
-                      (open-output-nowhere))])
+  (define curl-output (open-output-string))
+  (parameterize ([current-output-port curl-output])
     (define result
-      (system* (path->string post)
-               coverage-file
-               (if (verbose) "-v" "")))
+      (system* (path->string post) coverage-file "-v"))
+    (vprintf (get-output-string curl-output))
     (unless result
       (error 'coveralls "request to coveralls failed"))))
 
@@ -95,7 +90,7 @@
       (hash-ref report 'source_files)
       (list (hasheq 'source (file->string tests/prog.rkt)
                     'coverage (line-coverage coverage file)
-                    'name "tests/prog.rkt")))
+                    'name "private/tests/prog.rkt")))
      (check-equal? (hash-ref report 'repo_token) "abc"))))
 
 ;; -> [Hasheq String String
@@ -148,7 +143,7 @@
       (hasheq 'source_files
               (list (hasheq 'source (file->string tests/prog.rkt)
                             'coverage (line-coverage coverage file)
-                            'name "tests/prog.rkt")))))))
+                            'name "private/tests/prog.rkt")))))))
 
 ;; CoverallsCoverage = Nat | json-null
 
@@ -177,7 +172,7 @@
   (reverse line-cover))
 
 (module+ test
-  (define-runtime-path path "../tests/basic/not-run.rkt")
+  (define-runtime-path path "tests/not-run.rkt")
   (let ()
     (parameterize ([current-cover-environment (make-cover-environment)])
       (define file (path->string (simplify-path path)))
@@ -230,3 +225,12 @@
   (for/hasheq ([field (in-list '(id author_name author_email committer_name committer_email message))]
                [line (in-list lines)])
     (values field line)))
+
+;; Util
+
+(define (vprintf #:formatter [format format] . a)
+ (log-message (current-logger)
+              'debug
+              'cover
+              (apply format a)
+              #f))

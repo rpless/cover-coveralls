@@ -9,4 +9,4 @@
 
 (define build-deps '("rackunit-lib"))
 
-(define cover-formats '(("coveralls" cover generate-coveralls-coverage)))
+(define cover-formats '(("coveralls" cover/coveralls generate-coveralls-coverage)))
