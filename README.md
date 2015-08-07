@@ -1,4 +1,7 @@
 # Cover Coveralls
+[![Build Status](https://travis-ci.org/rpless/cover-coveralls.svg)](https://travis-ci.org/rpless/cover-coveralls)
+[![Coverage Status](https://coveralls.io/repos/rpless/cover-coveralls/badge.svg?branch=master&service=github)](https://coveralls.io/github/rpless/cover-coveralls?branch=master)
+
 Adds [Coveralls](https://coveralls.io/) support to [Cover](https://github.com/florence/cover).
 This plugin generates a Coveralls coverage json file and then sends it to Coveralls.
 
