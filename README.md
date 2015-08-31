@@ -25,13 +25,20 @@ before_install:
   - cat ../travis-racket/install-racket.sh | bash
   - export PATH="${RACKET_DIR}/bin:${PATH}"
 
-install: raco pkg install --deps search-auto $TRAVIS_BUILD_DIR # install dependencies
+install:
+  - git clone https://github.com/florence/cover ../cover
+  - raco pkg install --deps search-auto ../cover/
+  - raco pkg install --deps search-auto $TRAVIS_BUILD_DIR
 
 script:
- - raco test $TRAVIS_BUILD_DIR # run tests. you wrote tests, right?
- - raco cover -f coveralls -d $TRAVIS_BUILD_DIR/coverage . # generate coverage information for coveralls
+  - raco test $TRAVIS_BUILD_DIR # run tests. you wrote tests, right?
+
+after_success:
+  - raco cover -f coveralls -d $TRAVIS_BUILD_DIR/coverage . # generate coverage information for coveralls
 ```
 The above Travis configuration will install any project dependencies, test your project, and report coverage information to coveralls.
+
+If you want a failure to upload to Coveralls, move the `raco cover -f coveralls -d $TRAVIS_BUILD_DIR/coverage .` into the `script` section.
 
 For additional Travis configuration information look at [Travis Racket](https://github.com/greghendershott/travis-racket).
 
