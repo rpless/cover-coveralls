@@ -10,7 +10,7 @@ This plugin generates a Coveralls coverage json file and then sends it to Covera
 ## Use with TravisCI
 
 If your code is hosted on a public github repo then you can use this plugin in conjunction with [TravisCI](https://travis-ci.org/).
-Just enable your repository on both services and then add a `.travis.yml` file to your repo with the following contents:
+Just enable your repository on both services, add `cover-coveralls` to the `build-deps` of your `info.rkt` and then add a `.travis.yml` file to your repo with the following contents:
 ```yml
 langauge: c
 sudo: false
@@ -18,17 +18,14 @@ env:
   global:
     - RACKET_DIR=~/racket
   matrix:
-    - RACKET_VERSION=6.2
+    - RACKET_VERSION=6.2 # Set this to the version of racket you use
 
-before_install:
+before_install: # Install Racket
   - git clone https://github.com/greghendershott/travis-racket.git ../travis-racket
   - cat ../travis-racket/install-racket.sh | bash
   - export PATH="${RACKET_DIR}/bin:${PATH}"
 
-install:
-  - git clone https://github.com/florence/cover ../cover
-  - raco pkg install --deps search-auto ../cover/
-  - raco pkg install --deps search-auto $TRAVIS_BUILD_DIR
+install: raco pkg install --deps search-auto $TRAVIS_BUILD_DIR # install dependencies
 
 script:
   - raco test $TRAVIS_BUILD_DIR # run tests. you wrote tests, right?
