@@ -1,6 +1,7 @@
 #lang racket/base
 (provide generate-coveralls-coverage)
-(require json
+(require file/md5
+         json
          racket/file
          racket/function
          racket/list
@@ -88,7 +89,7 @@
          (generate-coveralls-report coverage (list (->absolute file)))))
      (check-equal?
       (hash-ref report 'source_files)
-      (list (hasheq 'source (file->string tests/prog.rkt)
+      (list (hasheq 'source_digest (file-digest tests/prog.rkt)
                     'coverage (line-coverage coverage file)
                     'name "private/tests/prog.rkt")))
      (check-equal? (hash-ref report 'repo_token) "abc"))))
@@ -126,9 +127,9 @@
     (for/list ([file (in-list files)]
                #:when (absolute-path? file))
       (define local-file (path->string (->relative file)))
-      (define src (file->string file))
+      (define src (file-digest file))
       (define c (line-coverage coverage file))
-      (hasheq 'source src 'coverage c 'name local-file)))
+      (hasheq 'source_digest src 'coverage c 'name local-file)))
   (hasheq 'source_files src-files))
 
 (module+ test
@@ -141,7 +142,7 @@
      (check-equal?
       (generate-source-files coverage (list file))
       (hasheq 'source_files
-              (list (hasheq 'source (file->string tests/prog.rkt)
+              (list (hasheq 'source_digest (file-digest tests/prog.rkt)
                             'coverage (line-coverage coverage file)
                             'name "private/tests/prog.rkt")))))))
 
@@ -227,6 +228,8 @@
     (values field line)))
 
 ;; Util
+
+(define file-digest (compose bytes->string/utf-8 md5 file->string))
 
 (define (vprintf #:formatter [format format] . a)
  (log-message (current-logger)
